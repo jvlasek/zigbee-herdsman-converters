@@ -3891,26 +3891,62 @@ export const definitions: DefinitionWithExtend[] = [
         fingerprint: tuya.fingerprint("TS0601", ["_TZE284_gnpflcoq"]),
         model: "TS0601_TZE284_gnpflcoq",
         vendor: "Tuya",
-        description: "4-in-1 mmWave presence sensor",
+        description: "10G mmWave 4-in-1 sensor (presence, temperature, humidity, illuminance)",
         extend: [tuya.modernExtend.tuyaBase({dp: true})],
         exposes: [
             e.presence(),
-            e.illuminance(),
+            e.battery(),
             e.temperature(),
             e.humidity(),
-            e.battery(),
-            e.numeric("sensitivity", ea.STATE_SET).withValueMin(0).withValueMax(10).withDescription("Radar sensitivity"),
-            e.numeric("fading_time", ea.STATE_SET).withValueMin(0).withValueMax(1000).withUnit("s").withDescription("Delay before vacant"),
+            e.enum("pir_sensitivity", ea.STATE_SET, ["low", "middle", "high"]).withDescription("PIR sensitivity"),
+            e.illuminance(),
+            e.numeric("pir_delay", ea.STATE_SET)
+                .withValueMin(10)
+                .withValueMax(180)
+                .withValueStep(1)
+                .withUnit("s")
+                .withDescription("PIR delay time"),
+            e.numeric("sensor_sampling", ea.STATE_SET)
+                .withValueMin(1)
+                .withValueMax(60)
+                .withValueStep(1)
+                .withUnit("min")
+                .withDescription("Sensor sampling time"),
+            e.numeric("temp_compensation", ea.STATE_SET)
+                .withValueMin(-10)
+                .withValueMax(10)
+                .withValueStep(0.1)
+                .withUnit("°C")
+                .withDescription("Temperature compensation"),
+            e.numeric("humidity_compensation", ea.STATE_SET)
+                .withValueMin(-30)
+                .withValueMax(30)
+                .withValueStep(1)
+                .withUnit("%")
+                .withDescription("Humidity Compensation"),
+
         ],
         meta: {
             tuyaDatapoints: [
+                // Pulled from Tuya gateway
                 [1, "presence", tuya.valueConverter.trueFalse0],
-                [2, "sensitivity", tuya.valueConverter.raw],
                 [4, "battery", tuya.valueConverter.raw],
                 [7, "temperature", tuya.valueConverter.divideBy10],
                 [8, "humidity", tuya.valueConverter.raw],
                 [11, "illuminance", tuya.valueConverter.raw],
-                [102, "fading_time", tuya.valueConverter.raw],
+                [
+                    9,
+                    "pir_sensitivity",
+                    tuya.valueConverterBasic.lookup({
+                        low: tuya.enum(0),
+                        middle: tuya.enum(1),
+                        high: tuya.enum(2),
+                    }),
+                ],
+		[12, "pir_delay", tuya.valueConverter.raw],
+		[101, "sensor_sampling", tuya.valueConverter.raw],
+		[102, "temp_compensation", tuya.valueConverter.divideBy10],
+		[103, "humidity_compensation", tuya.valueConverter.raw]
             ],
         },
     },
